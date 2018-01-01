@@ -10,6 +10,17 @@
 
 @implementation TestModel
 
+- (instancetype)initWithIndex:(NSInteger)index {
+    self = [super init];
+    if ( !self ) return nil;
+    _index = index;
+    return self;
+}
+
+- (NSString *)description {
+    return [NSString stringWithFormat:@"[TestModel:<%p> index:<%zd>]", self, _index];
+}
+
 - (void)dealloc {
     NSLog(@"%s", __func__);
 }

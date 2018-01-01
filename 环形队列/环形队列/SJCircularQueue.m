@@ -18,6 +18,7 @@ struct data_recorder {
 @property (nonatomic, assign) NSUInteger capacity;
 @property (nonatomic, assign) struct data_recorder *origin;
 @property (nonatomic, assign) struct data_recorder *next;
+@property (nonatomic, strong) dispatch_semaphore_t semaphore;
 
 @end
 
@@ -29,7 +30,8 @@ struct data_recorder {
     _capacity = capacity;
     _origin = calloc(capacity, sizeof(struct data_recorder));
     _next = _origin;
-    for ( int i = 1 ; i < _capacity ; i ++ ) { _origin[i].index = i;}
+    for ( int i = 1 ; i < _capacity ; i ++ ) { _origin[i].index = i; }
+    _semaphore = dispatch_semaphore_create(1);
     return self;
 }
 
@@ -39,22 +41,32 @@ struct data_recorder {
         if ( data ) CFRelease(data);
         else break;
     }
+    NSLog(@"%s", __func__);
 }
 
 #pragma mark -
 
 - (void)addObject:(id)anObject {
     if ( !anObject ) return;
-    if ( _next -> data ) CFRelease(_next -> data);
-    _next -> data = (__bridge_retained void *)anObject;
-    _next = &_origin[ (_next -> index + 1) % _capacity ];
+    [self addObjectsFromArray:@[anObject]];
+}
+
+- (void)addObjectsFromArray:(NSArray *)otherArray {
+    if ( !otherArray ) return;
+    dispatch_semaphore_wait(_semaphore, DISPATCH_TIME_FOREVER);
+    [otherArray enumerateObjectsUsingBlock:^(id  _Nonnull anObject, NSUInteger idx, BOOL * _Nonnull stop) {
+        if ( _next -> data ) CFRelease(_next -> data);
+        _next -> data = (__bridge_retained void *)anObject;
+        _next = &_origin[ (_next -> index + 1) % _capacity ];
+    }];
+    dispatch_semaphore_signal(_semaphore);
 }
 
 - (id)lastObject {
     NSUInteger index = _next -> index;
     if ( index == 0 ) index = _capacity - 1;
     else index -= 1;
-    return (__bridge id)_origin[ index ].data;
+    return [self objectAtIndex:index];
 }
 
 - (id)objectAtIndex:(NSUInteger)index {
@@ -91,4 +103,5 @@ struct data_recorder {
     }
     return valuesM;
 }
+
 @end

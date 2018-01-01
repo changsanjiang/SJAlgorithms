@@ -9,4 +9,6 @@
 #import <Foundation/Foundation.h>
 
 @interface TestModel : NSObject
+- (instancetype)initWithIndex:(NSInteger)index;
+@property (nonatomic, assign) NSInteger index;
 @end
