@@ -15,7 +15,6 @@ struct data_recorder {
 
 @interface SJCircularQueue ()
 
-@property (nonatomic, assign) NSUInteger capacity;
 @property (nonatomic, assign) struct data_recorder *origin;
 @property (nonatomic, assign) struct data_recorder *next;
 @property (nonatomic, strong) dispatch_semaphore_t semaphore;
@@ -27,11 +26,8 @@ struct data_recorder {
 - (instancetype)initWithCapacity:(NSUInteger)capacity {
     self = [super init];
     if ( !self ) return nil;
-    _capacity = capacity;
-    _origin = calloc(capacity, sizeof(struct data_recorder));
-    _next = _origin;
-    for ( int i = 1 ; i < _capacity ; i ++ ) { _origin[i].index = i; }
     _semaphore = dispatch_semaphore_create(1);
+    self.capacity = capacity;
     return self;
 }
 
@@ -46,6 +42,18 @@ struct data_recorder {
 
 #pragma mark -
 
+- (void)setCapacity:(NSUInteger)capacity {
+    if ( capacity == _capacity ) return;
+    _capacity = capacity;
+    _origin = calloc(capacity, sizeof(struct data_recorder));
+    _next = _origin;
+    for ( int i = 1 ; i < _capacity ; i ++ ) { _origin[i].index = i; }
+    NSArray *values = [self values];
+    if ( 0 != values.count ) {
+        [self addObjectsFromArray:[values subarrayWithRange:NSMakeRange(10, 1)]];
+    }
+}
+
 - (void)addObject:(id)anObject {
     if ( !anObject ) return;
     [self addObjectsFromArray:@[anObject]];
@@ -53,6 +61,9 @@ struct data_recorder {
 
 - (void)addObjectsFromArray:(NSArray *)otherArray {
     if ( !otherArray ) return;
+    if ( _capacity < otherArray.count ) {
+        otherArray = [otherArray subarrayWithRange:NSMakeRange(otherArray.count - _capacity, _capacity)];
+    }
     dispatch_semaphore_wait(_semaphore, DISPATCH_TIME_FOREVER);
     [otherArray enumerateObjectsUsingBlock:^(id  _Nonnull anObject, NSUInteger idx, BOOL * _Nonnull stop) {
         if ( _next -> data ) CFRelease(_next -> data);

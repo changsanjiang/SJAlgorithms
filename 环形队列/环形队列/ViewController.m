@@ -10,7 +10,7 @@
 #import "SJCircularQueue.h"
 #import "TestModel.h"
 
-static NSUInteger Capacity = 1000000;
+static NSUInteger Capacity = 10;
 
 @interface ViewController ()
 
@@ -31,10 +31,13 @@ static NSUInteger Capacity = 1000000;
 - (IBAction)add:(id)sender {
     
     NSLog(@"begin");
-    
-    for ( int i = 0 ; i < Capacity ; ++ i ) {
-        [queue addObject:[[TestModel alloc] initWithIndex:i]];
+    NSMutableArray *arrayM = [NSMutableArray array];
+    for ( int i = 0 ; i < Capacity + 2 ; ++ i ) {
+//        [queue addObject:[[TestModel alloc] initWithIndex:i]];
+        [arrayM addObject:[[TestModel alloc] initWithIndex:i]];
     }
+    
+    [queue addObjectsFromArray:arrayM];
     
     NSLog(@"end");
 }

@@ -15,6 +15,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (instancetype)initWithCapacity:(NSUInteger)capacity;
 
+@property (nonatomic, assign) NSUInteger capacity;
+
 - (void)addObject:(id)anObject;
 - (void)addObjectsFromArray:(NSArray *)otherArray;
 - (id __nullable)lastObject;
