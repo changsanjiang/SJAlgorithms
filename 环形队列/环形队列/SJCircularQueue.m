@@ -49,9 +49,7 @@ struct data_recorder {
     _next = _origin;
     for ( int i = 1 ; i < _capacity ; i ++ ) { _origin[i].index = i; }
     NSArray *values = [self values];
-    if ( 0 != values.count ) {
-        [self addObjectsFromArray:[values subarrayWithRange:NSMakeRange(10, 1)]];
-    }
+    [self addObjectsFromArray:values];
 }
 
 - (void)addObject:(id)anObject {
