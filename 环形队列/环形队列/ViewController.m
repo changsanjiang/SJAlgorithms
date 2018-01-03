@@ -32,8 +32,7 @@ static NSUInteger Capacity = 10;
     
     NSLog(@"begin");
     NSMutableArray *arrayM = [NSMutableArray array];
-    for ( int i = 0 ; i < Capacity + 2 ; ++ i ) {
-//        [queue addObject:[[TestModel alloc] initWithIndex:i]];
+    for ( int i = 0 ; i < Capacity + 5 ; ++ i ) {
         [arrayM addObject:[[TestModel alloc] initWithIndex:i]];
     }
     
@@ -50,6 +49,9 @@ static NSUInteger Capacity = 10;
 }
 - (IBAction)nill:(id)sender {
     queue = nil;
+}
+- (IBAction)obj:(id)sender {
+    NSLog(@"%@", [queue objectAtIndex:8]);
 }
 
 @end

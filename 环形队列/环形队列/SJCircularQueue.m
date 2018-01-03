@@ -80,7 +80,9 @@ struct data_recorder {
 
 - (id)objectAtIndex:(NSUInteger)index {
     if ( index >= _capacity ) return nil;
-    return (__bridge id)_origin[index].data;
+    NSInteger r_index = _next -> index + index;
+    if ( r_index > _capacity ) r_index = _capacity - r_index;
+    return (__bridge id)_origin[r_index].data;
 }
 
 - (NSArray *)values {
