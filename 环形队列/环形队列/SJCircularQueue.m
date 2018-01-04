@@ -17,6 +17,7 @@ struct data_recorder {
 
 @property (nonatomic, assign) struct data_recorder *origin;
 @property (nonatomic, assign) struct data_recorder *next;       // tail
+@property (nonatomic, assign) struct data_recorder *last;
 @property (nonatomic, strong) dispatch_semaphore_t semaphore;
 
 @end
@@ -45,16 +46,26 @@ struct data_recorder {
 - (void)setCapacity:(NSUInteger)capacity {
     if ( capacity == _capacity ) return;
     _capacity = capacity;
+    
     _origin = calloc(capacity, sizeof(struct data_recorder));
-    _next = _origin;
-    for ( int i = 1 ; i < _capacity - 1 ; i ++ ) _origin[i].index = i;
+    self.next = _origin;
+    self.last = _origin;
+    for ( int i = 1 ; i < _capacity ; i ++ ) _origin[i].index = i;
     NSArray *values = [self values];
     [self addObjectsFromArray:values];
 }
 
 - (void)addObject:(id)anObject {
     if ( !anObject ) return;
-    [self addObjectsFromArray:@[anObject]];
+    
+    dispatch_semaphore_wait(_semaphore, DISPATCH_TIME_FOREVER);
+    if ( _next -> data ) {
+        CFRelease(_next -> data);
+        _next -> data = nil;
+    }
+    _next -> data = (__bridge_retained void *)anObject;
+    self.next = &_origin[ ( _next -> index + 1 ) % _capacity ];
+    dispatch_semaphore_signal(_semaphore);
 }
 
 - (void)addObjectsFromArray:(NSArray *)otherArray {
@@ -62,33 +73,29 @@ struct data_recorder {
     if ( _capacity < otherArray.count ) {
         otherArray = [otherArray subarrayWithRange:NSMakeRange(otherArray.count - _capacity, _capacity)];
     }
-    dispatch_semaphore_wait(_semaphore, DISPATCH_TIME_FOREVER);
     [otherArray enumerateObjectsUsingBlock:^(id  _Nonnull anObject, NSUInteger idx, BOOL * _Nonnull stop) {
-        if ( _next -> data ) {
-            CFRelease(_next -> data);
-            _next -> data = nil;
-        }
-        _next -> data = (__bridge_retained void *)anObject;
-        _next = &_origin[ (_next -> index + 1) % _capacity ];
+        [self addObject:anObject];
     }];
-    dispatch_semaphore_signal(_semaphore);
 }
 
 - (id __nullable)firstObject {
-    
     if ( _next -> data ) return (__bridge id)_next -> data;
     else if ( _origin[0].data ) return (__bridge id)_origin[0].data;
-    
+    return nil;
+}
+
+- (id)objectAtIndex:(NSUInteger)index {
+    if ( index >= _capacity ) return nil;
+    if ( _next -> data ) return (__bridge id)_origin[( _next -> index + index ) % _capacity].data;
+    else if ( _origin[index].data ) return (__bridge id)_origin[index].data;
     return nil;
 }
 
 - (id)lastObject {
-    
-    NSUInteger index = ( _next -> index - 1 ) % _capacity;
-    if ( _origin[index].data ) return (__bridge id)_origin[index].data;
-    
+    if ( _last -> data ) return (__bridge id)_last -> data;
     return nil;
 }
+
 
 - (NSArray *)values {
     NSMutableArray *valuesM = [NSMutableArray array];
@@ -98,6 +105,11 @@ struct data_recorder {
 }
 
 #pragma mark -
+
+- (void)setNext:(struct data_recorder *)next {
+    _last = _next;
+    _next = next;
+}
 
 - (NSArray *)_cursorBeforeValues {
     NSMutableArray *valuesM = [NSMutableArray array];

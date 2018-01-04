@@ -20,6 +20,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)addObject:(id)anObject;
 - (void)addObjectsFromArray:(NSArray *)otherArray;
 - (id __nullable)firstObject;
+- (id __nullable)objectAtIndex:(NSUInteger)index;
 - (id __nullable)lastObject;
 - (NSArray *)values;
 

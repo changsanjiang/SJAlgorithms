@@ -43,7 +43,7 @@ static NSUInteger Capacity = 10;
     queue = nil;
 }
 - (IBAction)obj:(id)sender {
-//    NSLog(@"%@", [queue objectAtIndex:8]);
+    NSLog(@"%@", [queue objectAtIndex:2]);
 }
 - (IBAction)first:(id)sender {
     NSLog(@"%@", [queue firstObject]);
