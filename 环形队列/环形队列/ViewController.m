@@ -14,6 +14,7 @@ static NSUInteger Capacity = 10;
 
 @interface ViewController ()
 
+@property (nonatomic, assign) NSInteger index;
 @end
 
 @implementation ViewController {
@@ -29,16 +30,7 @@ static NSUInteger Capacity = 10;
 }
 
 - (IBAction)add:(id)sender {
-    
-    NSLog(@"begin");
-    NSMutableArray *arrayM = [NSMutableArray array];
-    for ( int i = 0 ; i < Capacity + 5 ; ++ i ) {
-        [arrayM addObject:[[TestModel alloc] initWithIndex:i]];
-    }
-    
-    [queue addObjectsFromArray:arrayM];
-    
-    NSLog(@"end");
+    [queue addObject:[[TestModel alloc] initWithIndex:++ _index]];
 }
 
 - (IBAction)get:(id)sender {
@@ -51,7 +43,10 @@ static NSUInteger Capacity = 10;
     queue = nil;
 }
 - (IBAction)obj:(id)sender {
-    NSLog(@"%@", [queue objectAtIndex:8]);
+//    NSLog(@"%@", [queue objectAtIndex:8]);
+}
+- (IBAction)first:(id)sender {
+    NSLog(@"%@", [queue firstObject]);
 }
 
 @end

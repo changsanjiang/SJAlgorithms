@@ -16,7 +16,7 @@ struct data_recorder {
 @interface SJCircularQueue ()
 
 @property (nonatomic, assign) struct data_recorder *origin;
-@property (nonatomic, assign) struct data_recorder *next;
+@property (nonatomic, assign) struct data_recorder *next;       // tail
 @property (nonatomic, strong) dispatch_semaphore_t semaphore;
 
 @end
@@ -47,7 +47,7 @@ struct data_recorder {
     _capacity = capacity;
     _origin = calloc(capacity, sizeof(struct data_recorder));
     _next = _origin;
-    for ( int i = 1 ; i < _capacity ; i ++ ) { _origin[i].index = i; }
+    for ( int i = 1 ; i < _capacity - 1 ; i ++ ) _origin[i].index = i;
     NSArray *values = [self values];
     [self addObjectsFromArray:values];
 }
@@ -64,25 +64,30 @@ struct data_recorder {
     }
     dispatch_semaphore_wait(_semaphore, DISPATCH_TIME_FOREVER);
     [otherArray enumerateObjectsUsingBlock:^(id  _Nonnull anObject, NSUInteger idx, BOOL * _Nonnull stop) {
-        if ( _next -> data ) CFRelease(_next -> data);
+        if ( _next -> data ) {
+            CFRelease(_next -> data);
+            _next -> data = nil;
+        }
         _next -> data = (__bridge_retained void *)anObject;
         _next = &_origin[ (_next -> index + 1) % _capacity ];
     }];
     dispatch_semaphore_signal(_semaphore);
 }
 
-- (id)lastObject {
-    NSUInteger index = _next -> index;
-    if ( index == 0 ) index = _capacity - 1;
-    else index -= 1;
-    return [self objectAtIndex:index];
+- (id __nullable)firstObject {
+    
+    if ( _next -> data ) return (__bridge id)_next -> data;
+    else if ( _origin[0].data ) return (__bridge id)_origin[0].data;
+    
+    return nil;
 }
 
-- (id)objectAtIndex:(NSUInteger)index {
-    if ( index >= _capacity ) return nil;
-    NSInteger r_index = _next -> index + index;
-    if ( r_index > _capacity ) r_index = _capacity - r_index;
-    return (__bridge id)_origin[r_index].data;
+- (id)lastObject {
+    
+    NSUInteger index = ( _next -> index - 1 ) % _capacity;
+    if ( _origin[index].data ) return (__bridge id)_origin[index].data;
+    
+    return nil;
 }
 
 - (NSArray *)values {
