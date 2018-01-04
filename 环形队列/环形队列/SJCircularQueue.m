@@ -18,7 +18,6 @@ struct data_recorder {
 @property (nonatomic, assign) struct data_recorder *origin;
 @property (nonatomic, assign) struct data_recorder *next;       // tail
 @property (nonatomic, assign) struct data_recorder *last;
-@property (nonatomic, strong) dispatch_semaphore_t semaphore;
 
 @end
 
@@ -27,7 +26,6 @@ struct data_recorder {
 - (instancetype)initWithCapacity:(NSUInteger)capacity {
     self = [super init];
     if ( !self ) return nil;
-    _semaphore = dispatch_semaphore_create(1);
     self.capacity = capacity;
     return self;
 }
@@ -55,17 +53,22 @@ struct data_recorder {
     [self addObjectsFromArray:values];
 }
 
+- (void)setNext:(struct data_recorder *)next {
+    _last = _next;
+    _next = next;
+}
+
+#pragma mark -
+
 - (void)addObject:(id)anObject {
     if ( !anObject ) return;
-    
-    dispatch_semaphore_wait(_semaphore, DISPATCH_TIME_FOREVER);
+
     if ( _next -> data ) {
         CFRelease(_next -> data);
         _next -> data = nil;
     }
     _next -> data = (__bridge_retained void *)anObject;
     self.next = &_origin[ ( _next -> index + 1 ) % _capacity ];
-    dispatch_semaphore_signal(_semaphore);
 }
 
 - (void)addObjectsFromArray:(NSArray *)otherArray {
@@ -105,11 +108,6 @@ struct data_recorder {
 }
 
 #pragma mark -
-
-- (void)setNext:(struct data_recorder *)next {
-    _last = _next;
-    _next = next;
-}
 
 - (NSArray *)_cursorBeforeValues {
     NSMutableArray *valuesM = [NSMutableArray array];
