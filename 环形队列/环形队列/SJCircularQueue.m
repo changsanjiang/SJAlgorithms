@@ -26,16 +26,19 @@ struct data_recorder {
 - (instancetype)initWithCapacity:(NSUInteger)capacity {
     self = [super init];
     if ( !self ) return nil;
+    _origin = NULL;
+    _next = NULL;
+    _last = NULL;
     self.capacity = capacity;
     return self;
 }
 
 - (void)dealloc {
     for ( int i = 0 ; i < _capacity ; i ++ ) {
-        void *data = _origin[i].data;
-        if ( data ) CFRelease(data);
-        else break;
+        struct data_recorder recorder = _origin[i];
+        if ( recorder.data ) CFRelease(recorder.data);
     }
+    if ( _origin ) free( _origin );
     NSLog(@"%s", __func__);
 }
 
@@ -44,7 +47,7 @@ struct data_recorder {
 - (void)setCapacity:(NSUInteger)capacity {
     if ( capacity == _capacity ) return;
     _capacity = capacity;
-    
+    if ( _origin ) free(_origin);
     _origin = calloc(capacity, sizeof(struct data_recorder));
     self.next = _origin;
     self.last = _origin;

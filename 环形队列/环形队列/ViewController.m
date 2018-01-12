@@ -10,7 +10,7 @@
 #import "SJCircularQueue.h"
 #import "TestModel.h"
 
-static NSUInteger Capacity = 10000000;
+static NSUInteger Capacity = 100;
 
 @interface ViewController ()
 
